@@ -1,3 +1,4 @@
-# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
-# removed in listing 6.30
+paul:
+  name: Paul Chicarello
+  email: paul.chicarello@baystateit.com
+  password_digest: <%= User.digest('password') %>
