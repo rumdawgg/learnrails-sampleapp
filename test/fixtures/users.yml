@@ -1,4 +1,9 @@
 paul:
   name: Paul Chicarello
-  email: paul.chicarello@baystateit.com
+  email: paul@chicarello.com
+  password_digest: <%= User.digest('password') %>
+
+katie:
+  name: Katie Shaiken
+  email: katie@chicarello.com
   password_digest: <%= User.digest('password') %>
