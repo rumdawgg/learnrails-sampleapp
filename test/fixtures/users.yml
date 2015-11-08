@@ -2,6 +2,7 @@ paul:
   name: Paul Chicarello
   email: paul@chicarello.com
   password_digest: <%= User.digest('password') %>
+  admin: true
 
 katie:
   name: Katie Shaiken
