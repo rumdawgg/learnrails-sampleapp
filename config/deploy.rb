@@ -32,6 +32,8 @@ set :conditionally_migrate, true
 # Check custom directories exist
 set :custom_directories, %W{local_shared/passenger_restart}
 
+# Default value for :linked_files is []
+set :linked_files, %w{config/database.yml}
 
 # Make sure rails and rake commands are called with bundle exec
 SSHKit.config.command_map[:rake]  = "bundle exec rake"
@@ -72,23 +74,53 @@ namespace :environment_check do
   end
 end
 
+# Maintenance tasks
+namespace :maint do
+  desc "Setup maintenance page on webserver"
+  task :up do
+    on roles(:web) do
+      within release_path do
+        execute :mkdir, "-p public/system"
+        execute :cp, "public/system_templates/maintenance.html public/system/maintenance.html"
+      end
+    end
+  end
+  
+  task :down do
+    on roles(:web) do
+      within release_path do
+        execute :rm, "-f public/system/maintenance.html"
+      end
+    end
+  end
+end
+
 # Deploy tasks
 namespace :deploy do
     desc "Restart application using a rolling restart"
     task :rolling_restart do
         on roles(:app), in: :sequence, wait: 10 do |host|
-            on roles(:web) do
-                set_haproxy_state('disable', "#{host}")
-            end 
-            sleep(10)
+            info "[deploy:rolling_restart] Restarting passenger on #{host}"
             execute :touch, "#{fetch(:deploy_to)}/local_shared/passenger_restart/restart.txt"
             sleep(10)
-            on roles(:web) do
-                set_haproxy_state('enable', "#{host}")
-            end
         end
     end
 
-    before :deploy, 'environment_check:all'
-    after :publishing, :restart
+  desc "Check if downtime is required and bring site down"
+  task :downtime do
+    on roles(:db) do
+      if fetch(:conditionally_migrate) && test("diff -q #{release_path}/db/migrate #{current_path}/db/migrate")
+        info "[deploy:downtime] Skip `deploy:downtime` No downtime necessary"
+      else
+        info "[deploy:downtime] Bringing site down to run migrations"
+        invoke 'maint:up'
+      end
+    end
+  end
+  
+  before :deploy, 'environment_check:all'
+  #before :deploy, 'deploy:downtime'
+  after :publishing, :restart
+  after :restart, 'maint:down'
+
 end

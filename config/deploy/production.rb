@@ -1,3 +1,9 @@
+set :rails_env, 'production'
+set :stage, 'production'
+	server 'rails.lan.chicarello.com', roles: %w{app db web}
 
-server 'rails.lan.chicarello.com', user: 'www', roles: %w{app db web}, my_property: :my_value
-
+namespace :deploy do
+  task :restart do
+    invoke 'deploy:rolling_restart'
+  end
+end
