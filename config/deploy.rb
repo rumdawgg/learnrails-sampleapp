@@ -102,7 +102,6 @@ namespace :deploy do
         on roles(:app), in: :sequence, wait: 10 do |host|
             info "[deploy:rolling_restart] Restarting passenger on #{host}"
             execute :touch, "#{fetch(:deploy_to)}/local_shared/passenger_restart/restart.txt"
-            sleep(10)
         end
     end
 
